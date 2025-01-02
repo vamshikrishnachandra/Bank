@@ -1,0 +1,170 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bank Statement Processor{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        .loader {
+            border-top-color: #3498db;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+        }
+        
+        @-webkit-keyframes spinner {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <!-- Logo -->
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="{% url 'dashboard' %}" class="text-xl font-bold text-blue-600">
+                            <i class="fas fa-university mr-2"></i>
+                            Statement Processor
+                        </a>
+                    </div>
+                    
+                    <!-- Navigation Links -->
+                    <div class="hidden md:ml-6 md:flex md:space-x-8">
+                        <a href="{% url 'dashboard' %}" 
+                           class="inline-flex items-center px-1 pt-1 text-gray-900 {% if request.resolver_match.url_name == 'dashboard' %}border-b-2 border-blue-500{% endif %}">
+                            <i class="fas fa-chart-line mr-2"></i>
+                            Dashboard
+                        </a>
+                        <a href="{% url 'upload_statement' %}"
+                           class="inline-flex items-center px-1 pt-1 text-gray-900 {% if request.resolver_match.url_name == 'upload_statement' %}border-b-2 border-blue-500{% endif %}">
+                            <i class="fas fa-upload mr-2"></i>
+                            Upload
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="flex items-center">
+                    {% if user.is_authenticated %}
+                        <div class="ml-3 relative">
+                            <div class="flex items-center">
+                                <span class="text-gray-700 mr-4">{{ user.username }}</span>
+                                <form method="post" action="{% url 'logout' %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            Login
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="md:hidden">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+            <a href="{% url 'dashboard' %}" 
+               class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+                <i class="fas fa-chart-line mr-2"></i>
+                Dashboard
+            </a>
+            <a href="{% url 'upload_statement' %}"
+               class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+                <i class="fas fa-upload mr-2"></i>
+                Upload
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        {% block header %}{% endblock %}
+        
+        <!-- Content -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white shadow-lg mt-8">
+        <div class="max-w-7xl mx-auto py-4 px-4">
+            <div class="flex justify-between items-center">
+                <div class="text-gray-500 text-sm">
+                    © 2024 Bank Statement Processor. All rights reserved.
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-question-circle"></i>
+                        Help
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-shield-alt"></i>
+                        Privacy
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-file-contract"></i>
+                        Terms
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex justify-center items-center">
+        <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Show loading overlay when submitting forms
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function() {
+                    document.getElementById('loading-overlay').classList.remove('hidden');
+                });
+            });
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.querySelector('.md\\:hidden');
+            const isClickInside = mobileMenu.contains(event.target);
+            
+            if (!isClickInside && !mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

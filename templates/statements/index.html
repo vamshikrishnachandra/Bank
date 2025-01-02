@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Statement Processor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-center text-indigo-700">Bank Statement Processor</h1>
+
+        <!-- Upload Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Upload Bank Statement</h2>
+            <form id="uploadForm" class="space-y-4">
+                <!-- Bank Name Dropdown -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Select Bank</label>
+                    <select id="bankName"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Loading Banks...</option>
+                    </select>
+                </div>
+
+                <!-- Statement Type Dropdown -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Select Statement Type</label>
+                    <select id="statementType"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Loading Statement Types...</option>
+                    </select>
+                </div>
+
+                <!-- File Upload Input -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Select PDF Bank Statement</label>
+                    <input type="file" accept=".pdf" id="statementFile"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <button type="submit"
+                    class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    Upload and Process
+                </button>
+            </form>
+            <div id="uploadStatus" class="mt-4 text-lg font-medium text-gray-700"></div>
+            <div id="loadingSpinner" class="mt-4 hidden text-center">
+                <svg class="animate-spin h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Account Information Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8 hidden" id="accountInfoSection">
+            <h2 class="text-xl font-semibold mb-4">Account Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="space-y-2">
+                    <p class="text-sm text-gray-600">Account Holder Name</p>
+                    <p class="font-medium" id="holder_name">-</p>
+                </div>
+                <div class="space-y-2">
+                    <p class="text-sm text-gray-600">Account Number</p>
+                    <p class="font-medium" id="account_number">-</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">From Date</label>
+                        <input type="date" id="fromDate"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">To Date</label>
+                        <input type="date" id="toDate"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8 hidden" id="transactionsSection">
+            <h2 class="text-xl font-semibold mb-4">Transactions</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTable" class="bg-white divide-y divide-gray-200"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Fetch Bank Names
+            fetch('api/bank/')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('bankName').innerHTML = data.map(bank => `<option value="${bank.name}">${bank.name}</option>`).join('');
+                });
+
+            // Fetch Statement Types
+            fetch('api/statement_type/')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('statementType').innerHTML = data.map(type => `<option value="${type.name}">${type.name}</option>`).join('');
+                });
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('statementFile');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const bankName = document.getElementById('bankName').value;
+            const statementType = document.getElementById('statementType').value;
+            const spinner = document.getElementById('loadingSpinner');
+
+            if (!fileInput.files[0] || !bankName || !statementType) {
+                alert('All fields are required!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('bank_name', bankName);
+            formData.append('statement_type', statementType);
+
+            spinner.classList.remove('hidden');
+            uploadStatus.textContent = ""; // Clear previous status
+
+            try {
+                const response = await fetch('upload_pdf/', { method: 'POST', body: formData });
+                const result = await response.json();
+
+                spinner.classList.add('hidden');
+
+                if (response.ok) {
+                    if (result.parsed_data.account_number && result.parsed_data.transactions && result.parsed_data.transactions.length > 0) {
+                        // Populate Account Information
+                        document.getElementById('holder_name').textContent = result.parsed_data.account_holder_name || '-';
+                        document.getElementById('account_number').textContent = result.parsed_data.account_number || '-';
+                        document.getElementById('fromDate').value = result.parsed_data.statement_dates[0] || '';
+                        document.getElementById('toDate').value = result.parsed_data.statement_dates[1] || '';
+
+                        uploadStatus.textContent = "Upload successful! Processing...";
+                        document.getElementById('accountInfoSection').classList.remove('hidden');
+                        document.getElementById('transactionsSection').classList.remove('hidden');
+                        loadTransactions(result.parsed_data.transactions);
+                    } else {
+                        uploadStatus.textContent = result.message || "No valid transactions found.";
+                    }
+                } else {
+                    uploadStatus.textContent = result.message || "Error occurred during upload.";
+                }
+            } catch (error) {
+                spinner.classList.add('hidden');
+                uploadStatus.textContent = "Error occurred during upload.";
+            }
+        });
+
+        function loadTransactions(transactions) {
+            const transactionsTable = document.getElementById('transactionsTable');
+            transactionsTable.innerHTML = '';
+            transactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.amount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.type}</td>
+                `;
+                transactionsTable.appendChild(row);
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Statements</title>
+</head>
+<body>
+    <h1>Bank Statements</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Account Number</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for statement in bank_statements %}
+            <tr>
+                <td>{{ statement.date }}</td>
+                <td>{{ statement.account_number }}</td>
+                <td>{{ statement.description }}</td>
+                <td>{{ statement.amount }}</td>
+                <td>{{ statement.type }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

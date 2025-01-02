@@ -1,0 +1,52 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Parser</title>
+    <style>
+        #output pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+        }
+    </style>
+    <script>
+        async function uploadPDF(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('pdfFile');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const response = await fetch('/upload_and_parse_pdf/', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            if (data.parsed_text) {
+                const outputContainer = document.getElementById('output');
+                outputContainer.innerHTML = '';
+                data.parsed_text.forEach((pageText, index) => {
+                    const pageDiv = document.createElement('div');
+                    pageDiv.innerHTML = `<h3>Page ${index + 1}</h3><pre>${pageText}</pre>`;
+                    outputContainer.appendChild(pageDiv);
+                });
+            } else {
+                alert('Error parsing PDF');
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>PDF Parser</h1>
+    <form onsubmit="uploadPDF(event)">
+        <input type="file" id="pdfFile" accept="application/pdf" required>
+        <button type="submit">Upload and Parse</button>
+    </form>
+    <div id="output"></div>
+</body>
+</html>
